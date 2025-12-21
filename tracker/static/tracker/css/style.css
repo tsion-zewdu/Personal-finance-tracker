@@ -1,0 +1,156 @@
+/* Modal styles */
+.modal-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Focus styles */
+.focus-ring:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Scrollbar styles */
+.scroll-area::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scroll-area::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Table row hover effect */
+table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+/* Card hover effects */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Button transitions */
+.btn-transition {
+    transition: all 0.2s ease;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Toast animation */
+.toast-enter {
+    animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Ensure full height for pages */
+html, body {
+    height: 100%;
+}
+
+/* Sidebar transition */
+#sidebar {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Overlay transition */
+#sidebar-overlay {
+    transition: opacity 0.3s ease-in-out;
+}
+/* Ensure mobile button is visible on mobile */
+#mobile-menu-btn {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    #mobile-menu-btn {
+        display: block !important;
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 9999;
+        background: #2563eb; /* blue-600 */
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    #mobile-menu-btn:hover {
+        background: #1d4ed8; /* blue-700 */
+    }
+    
+    /* Make sure overlay is on top */
+    #sidebar-overlay {
+        z-index: 9998;
+    }
+    
+    /* Make sure sidebar is on top */
+    #sidebar {
+        z-index: 9999;
+    }
+}
