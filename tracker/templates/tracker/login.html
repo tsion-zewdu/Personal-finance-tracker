@@ -1,0 +1,130 @@
+{% extends 'tracker/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block auth_content %}
+<!-- LOGIN PAGE -->
+<div id="page-login" class="page active w-full h-full overflow-y-auto scroll-area" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="min-h-full flex items-center justify-center px-4 py-12">
+        <main class="w-full max-w-md">
+            <div class="bg-white rounded-2xl shadow-2xl p-8">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                        <span class="text-3xl">💰</span>
+                    </div>
+                    <h1 id="login-app-title" class="text-3xl font-bold text-gray-900 mb-2">Sign In</h1>
+                    <p id="login-welcome" class="text-gray-600">Welcome back! Sign in to continue</p>
+                </div>
+                
+                <!-- Fake form to trick browsers -->
+                <form style="display: none;" aria-hidden="true">
+                    <input type="text" name="fakeusernameremembered">
+                    <input type="password" name="fakepasswordremembered">
+                </form>
+                
+                <form method="post" class="space-y-4" autocomplete="off" id="loginForm">
+                    {% csrf_token %}
+                    
+                    <!-- Custom form fields to prevent autofill -->
+                    <div class="mb-4">
+                        <label for="id_username_custom" class="block text-sm font-medium text-gray-700 mb-1">
+                            Username
+                        </label>
+                        <input type="text" 
+                               name="username" 
+                               id="id_username_custom" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               required
+                               autocomplete="off"
+                               autocorrect="off"
+                               autocapitalize="none"
+                               spellcheck="false"
+                               placeholder="Enter your username">
+                        {% if form.username.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form.username.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_password_custom" class="block text-sm font-medium text-gray-700 mb-1">
+                            Password
+                        </label>
+                        <input type="password" 
+                               name="password" 
+                               id="id_password_custom" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               required
+                               autocomplete="new-password"
+                               placeholder="Enter your password">
+                        {% if form.password.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form.password.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="focus-ring rounded border-gray-300 text-blue-600 mr-2" name="remember_me">
+                            <span class="text-gray-600">Remember me</span>
+                        </label>
+                        <a href="{% url 'forgot_password' %}" class="focus-ring text-blue-600 hover:text-blue-700 font-medium">
+                            Forgot password?
+                        </a>
+                    </div>
+                    
+                    <button type="submit" class="focus-ring w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">Don't have an account? 
+                        <a href="{% url 'register' %}" class="focus-ring text-blue-600 hover:text-blue-700 font-semibold">
+                            Create Account
+                        </a>
+                    </p>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <a href="{% url 'welcome' %}" class="focus-ring text-sm text-slate-600 hover:text-slate-800">
+                        ← Back to Home
+                    </a>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <p class="text-xs text-center text-gray-500">🔒 Demo Mode: Use any email/password to continue</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+// Clear any autofilled data
+document.addEventListener('DOMContentLoaded', function() {
+    // Clear fields immediately
+    document.getElementById('id_username_custom').value = '';
+    document.getElementById('id_password_custom').value = '';
+    
+    // Set attributes to prevent autofill
+    document.getElementById('id_username_custom').setAttribute('autocomplete', 'new-username');
+    document.getElementById('id_password_custom').setAttribute('autocomplete', 'new-password');
+    
+    // Clear after a short delay (in case browser autofills after load)
+    setTimeout(function() {
+        document.getElementById('id_username_custom').value = '';
+        document.getElementById('id_password_custom').value = '';
+    }, 100);
+    
+    // Clear on form submit to prevent browser from saving
+    document.getElementById('loginForm').addEventListener('submit', function() {
+        // Optional: You can remove this if you want browser to save credentials
+        // localStorage.removeItem('username');
+        // localStorage.removeItem('password');
+    });
+});
+</script>
+{% endblock %}

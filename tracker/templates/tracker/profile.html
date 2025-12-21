@@ -1,0 +1,96 @@
+{% extends 'tracker/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Profile - Personal Finance Tracker{% endblock %}
+
+{% block content %}
+<!-- PROFILE PAGE -->
+<div id="content-profile" class="content-page active flex-1 overflow-y-auto scroll-area">
+    <header class="bg-white border-b border-slate-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-slate-900">Profile & Settings</h1>
+        <p class="text-sm text-slate-600 mt-1">Manage your account and preferences</p>
+    </header>
+    
+    <main class="p-6 space-y-6">
+        <!-- Profile Info -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Profile Information</h3>
+            <div class="flex items-center gap-6 mb-6">
+                <div class="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+                    <span id="profile-avatar">{{ request.user.username|first|upper }}</span>
+                </div>
+                <div>
+                    <button type="button" class="focus-ring px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-sm transition-colors">
+                        Change Avatar
+                    </button>
+                    <p class="text-xs text-slate-500 mt-1">JPG, PNG or GIF (max 2MB)</p>
+                </div>
+            </div>
+            
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="focus-ring px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
+                    Save Changes
+                </button>
+            </form>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="bg-white rounded-xl shadow-sm border border-red-200 p-6">
+            <h3 class="text-lg font-semibold text-red-900 mb-4">Danger Zone</h3>
+            <p class="text-sm text-slate-600 mb-4">These actions are permanent and cannot be undone.</p>
+            <div class="space-y-3">
+                <button id="clear-data-btn" 
+                        class="focus-ring px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-medium rounded-lg transition-colors text-sm">
+                    Clear All Data
+                </button>
+                <button type="button" 
+                        class="focus-ring px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm ml-2">
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Clear data button
+    document.getElementById('clear-data-btn')?.addEventListener('click', function() {
+        document.getElementById('delete-message').textContent = 
+            'Are you sure you want to clear all your financial data? This will delete all transactions, categories, and budgets. This action cannot be undone.';
+        
+        window.deleteCallback = function() {
+            // In a real implementation, you would send a request to clear all data
+            fetch('/api/clear-data/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('All data cleared successfully');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard/';
+                    }, 1000);
+                } else {
+                    showToast('Failed to clear data');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred');
+                console.error('Error:', error);
+            });
+            
+            hideModal('delete-modal');
+        };
+        
+        showModal('delete-modal');
+    });
+</script>
+{% endblock %}

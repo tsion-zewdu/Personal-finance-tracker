@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Personal Finance Tracker{% endblock %}</title>
+    
+    {% load static %}
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#10b981',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'tracker/css/style.css' %}">
+    
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="h-full w-full bg-gray-50">
+    {% if not user.is_authenticated and request.path == '/' %}
+        <!-- Welcome/Landing Page Layout -->
+        {% block welcome_content %}{% endblock %}
+    {% elif user.is_authenticated %}
+        <!-- Main App Layout -->
+        <div class="flex h-screen">
+            {% include 'tracker/includes/_sidebar.html' %}
+            
+            <!-- Main content area -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-btn" onclick="toggleSidebar()" class="md:hidden fixed top-4 left-4 z-50 p-4 bg-blue-600 text-white rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-blue-700 transition-colors animate-pulse">
+                    <i class="fas fa-bars text-2xl"></i>
+                    <span class="sr-only">Menu</span>
+                </button>
+                
+                <!-- Main content -->
+                <div class="flex-1 overflow-y-auto">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+        
+        {% include 'tracker/includes/_modals.html' %}
+    {% else %}
+        <!-- Auth Pages Layout -->
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-y-32 hidden">
+        <p id="toast-message" class="text-sm font-medium"></p>
+    </div>
+    
+    <!-- jQuery for AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{% static 'tracker/js/app.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Messages -->
+    {% if messages %}
+    <script>
+        {% for message in messages %}
+            showToast("{{ message }}", 3000);
+        {% endfor %}
+    </script>
+    {% endif %}
+    <!-- Load sidebar script -->
+    <script src="{% static 'tracker/js/sidebar.js' %}"></script>
+</body>
+</html>

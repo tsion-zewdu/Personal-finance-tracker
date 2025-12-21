@@ -1,0 +1,266 @@
+{% extends 'tracker/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Dashboard - Personal Finance Tracker{% endblock %}
+
+{% block content %}
+<!-- DASHBOARD PAGE -->
+<div class="min-h-full p-4 md:p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-900">Financial Overview</h1>
+        <p class="text-sm text-slate-600 mt-1">Track your income, expenses, and budgets</p>
+    </div>
+    
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Income</p>
+                <i class="fas fa-money-bill-wave text-2xl text-green-500"></i>
+            </div>
+            <p class="text-2xl font-bold text-green-600">
+                {{ user_profile.currency_symbol }}{{ income|floatformat:2|intcomma }}
+            </p>
+            <p class="text-xs text-slate-500 mt-1">This month</p>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Expenses</p>
+                <i class="fas fa-shopping-cart text-2xl text-red-500"></i>
+            </div>
+            <p class="text-2xl font-bold text-red-600">
+                {{ user_profile.currency_symbol }}{{ expenses|floatformat:2|intcomma }}
+            </p>
+            <p class="text-xs text-slate-500 mt-1">This month</p>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Balance</p>
+                <i class="fas fa-wallet text-2xl text-blue-500"></i>
+            </div>
+            <p class="text-2xl font-bold text-blue-600">
+                {{ user_profile.currency_symbol }}{{ balance|floatformat:2|intcomma }}
+            </p>
+            <p class="text-xs text-slate-500 mt-1">Net this month</p>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Savings Rate</p>
+                <i class="fas fa-chart-line text-2xl text-purple-500"></i>
+            </div>
+            <p class="text-2xl font-bold text-purple-600">{{ savings_rate }}%</p>
+            <p class="text-xs text-slate-500 mt-1">Of income saved</p>
+        </div>
+    </div>
+    
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Spending by Category</h3>
+            <div class="h-64">
+                <canvas id="dash-pie-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Monthly Trend</h3>
+            <div class="h-64">
+                <canvas id="dash-line-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions & Budget Alerts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Transactions -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-slate-900">Recent Transactions</h3>
+                <a href="{% url 'transactions' %}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    View All <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+            <div class="space-y-3">
+                {% if recent_transactions %}
+                    {% for transaction in recent_transactions %}
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-slate-900 truncate">
+                                {{ transaction.description|default:transaction.category.name|default:"No description" }}
+                            </p>
+                            <div class="flex items-center mt-1">
+                                <span class="text-xs text-slate-500 mr-2">{{ transaction.category.name|default:"Uncategorized" }}</span>
+                                <span class="text-xs text-slate-500">•</span>
+                                <span class="text-xs text-slate-500 ml-2">{{ transaction.date }}</span>
+                            </div>
+                        </div>
+                        <div class="ml-4 text-right">
+                            <p class="text-sm font-semibold {% if transaction.transaction_type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
+                                {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %}
+                                {{ user_profile.currency_symbol }}{{ transaction.amount|floatformat:2|intcomma }}
+                            </p>
+                            <p class="text-xs text-slate-500 mt-1">
+                                {{ transaction.get_payment_method_display }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-exchange-alt text-3xl text-slate-300 mb-3"></i>
+                        <p class="text-sm text-slate-500">No transactions yet.</p>
+                        <button id="add-transaction-btn" class="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                            Add your first transaction
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Budget Alerts -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+    <h3 class="text-lg font-semibold text-slate-900 mb-4">Budget Alerts</h3>
+    <div class="space-y-3 max-h-80 overflow-y-auto pr-2">
+        {% for alert in budget_alerts %}
+        <div class="p-4 rounded-lg {% if alert.percentage >= 100 %}bg-red-50 border border-red-200{% else %}bg-amber-50 border border-amber-200{% endif %}">
+            <div class="flex items-start">
+                <i class="fas {% if alert.percentage >= 100 %}fa-exclamation-circle text-red-500{% else %}fa-exclamation-triangle text-amber-500{% endif %} mt-1 mr-3 text-lg"></i>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium {% if alert.percentage >= 100 %}text-red-900{% else %}text-amber-900{% endif %} mb-1">
+                        {{ alert.category }}
+                    </p>
+                    <div class="flex items-center justify-between text-xs {% if alert.percentage >= 100 %}text-red-600{% else %}text-amber-600{% endif %} mb-2">
+                        <span>{{ alert.percentage|floatformat:0 }}% of budget used</span>
+                        <span class="font-semibold">{{ user_profile.currency_symbol }}{{ alert.spent|floatformat:0|intcomma }} / {{ user_profile.currency_symbol }}{{ alert.budget|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="h-2 rounded-full {% if alert.percentage >= 100 %}bg-red-500{% else %}bg-amber-500{% endif %}" 
+                             style="width: {{ alert.percentage|floatformat:0 }}%; max-width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-8">
+            <i class="fas fa-check-circle text-3xl text-green-300 mb-3"></i>
+            <p class="text-sm text-slate-500">All budgets are on track!</p>
+            <p class="text-xs text-slate-500 mt-1">Set budgets in Categories & Budgets to get alerts.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Pie Chart
+    const categoryData = {{ category_data|safe }};
+    const pieCtx = document.getElementById('dash-pie-chart');
+    
+    if (pieCtx && Object.keys(categoryData).length > 0) {
+        new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(categoryData),
+                datasets: [{
+                    data: Object.values(categoryData),
+                    backgroundColor: [
+                        '#ef4444', '#f59e0b', '#10b981', '#3b82f6', 
+                        '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e',
+                        '#8b5cf6', '#84cc16'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    } else {
+        pieCtx.parentElement.innerHTML = `
+            <div class="h-full flex items-center justify-center">
+                <div class="text-center">
+                    <i class="fas fa-chart-pie text-3xl text-slate-300 mb-2"></i>
+                    <p class="text-sm text-slate-500">No spending data available</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Line Chart
+    const trendData = {{ monthly_trend|safe }};
+    const lineCtx = document.getElementById('dash-line-chart');
+    
+    if (lineCtx) {
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: trendData.map(item => item.month),
+                datasets: [{
+                    label: 'Expenses',
+                    data: trendData.map(item => item.amount),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '{{ user_profile.currency_symbol }}' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+<!-- Hidden data for JavaScript -->
+<script id="categories-data" type="application/json">
+    {{ categories_json|safe }}
+</script>
+{% endblock %}
