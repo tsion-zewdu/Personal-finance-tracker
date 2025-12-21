@@ -43,7 +43,7 @@ A modern Django web application for managing personal finances with comprehensiv
 ### Prerequisites
 - Python 3.8+
 - pip package manager
-- Git (optional)
+- Git 
 
 ### Installation
 ```bash
