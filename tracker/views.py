@@ -1,7 +1,7 @@
 import json
 import csv
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -265,34 +265,36 @@ def transactions_view(request):
 @login_required
 def categories_view(request):
     """Categories and budgets management"""
+
+    if not Category.objects.filter(user=request.user, is_default=True).exists():
+        create_default_categories(request.user)
+
     expense_categories = Category.objects.filter(
         user=request.user,
         category_type='expense'
     )
-    
+
     income_categories = Category.objects.filter(
         user=request.user,
         category_type='income'
     )
-    
-    # Calculate totals
+
     today = timezone.now().date()
     current_month = today.replace(day=1)
-    
+
     total_budget = sum(cat.monthly_budget for cat in expense_categories)
-    
+
     total_spent = Transaction.objects.filter(
         user=request.user,
         transaction_type='expense',
         date__year=current_month.year,
         date__month=current_month.month
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
-    
+
     remaining = total_budget - total_spent
-    
-    # Get user profile for currency
+
     user_profile = get_user_profile(request.user)
-    
+
     context = {
         'expense_categories': expense_categories,
         'income_categories': income_categories,
@@ -301,9 +303,8 @@ def categories_view(request):
         'remaining': remaining,
         'user_profile': user_profile,
     }
-    
-    return render(request, 'tracker/categories.html', context)
 
+    return render(request, 'tracker/categories.html', context)
 
 @login_required
 def reports_view(request):
@@ -510,21 +511,19 @@ def download_csv(request):
 def create_default_categories(user):
     """Create default categories for new user"""
     default_categories = [
-        # Expense categories
         ('Food', 'expense', '🍔', 0),
         ('Transport', 'expense', '🚗', 0),
         ('Shopping', 'expense', '🛍️', 0),
         ('Bills', 'expense', '📄', 0),
         ('Entertainment', 'expense', '🎬', 0),
         ('Other', 'expense', '📦', 0),
-        
-        # Income categories
+
         ('Salary', 'income', '💼', 0),
         ('Freelance', 'income', '💻', 0),
         ('Gifts', 'income', '🎁', 0),
         ('Other Income', 'income', '💰', 0),
     ]
-    
+
     categories = []
     for name, category_type, icon, budget in default_categories:
         categories.append(Category(
@@ -535,7 +534,7 @@ def create_default_categories(user):
             monthly_budget=budget,
             is_default=True
         ))
-    
+
     Category.objects.bulk_create(categories)
 
 # REST API Views
@@ -611,46 +610,54 @@ def delete_transaction(request, transaction_id):
         }, status=404)
 
 
+from decimal import Decimal, InvalidOperation
+
 @login_required
 @require_POST
 def update_category(request, category_id):
-    """Update an existing category"""
+    """Update category"""
     try:
         category = Category.objects.get(id=category_id, user=request.user)
-        
+
         name = request.POST.get('name')
         category_type = request.POST.get('category-type')
         icon = request.POST.get('icon')
         monthly_budget = request.POST.get('monthly_budget')
-        
-        # Update fields
+
+        # Convert budget to Decimal if provided
+        budget_value = None
+        if monthly_budget:
+            try:
+                budget_value = Decimal(monthly_budget)
+            except InvalidOperation:
+                return JsonResponse({'success': False, 'errors': 'Invalid budget value'}, status=400)
+
+        if category.is_default:
+            # Only default expense categories can update monthly_budget
+            if category.category_type == 'expense' and budget_value is not None:
+                category.monthly_budget = budget_value
+            category.save()
+            return JsonResponse({'success': True, 'message': 'Category updated successfully'})
+
+        # For user-added categories (all fields editable)
         if name:
             category.name = name
         if category_type:
             category.category_type = category_type
         if icon is not None:
             category.icon = icon
-        if monthly_budget is not None:
-            category.monthly_budget = monthly_budget if category_type == 'expense' else 0
-        
-        category.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Category updated successfully'
-        })
-        
-    except Category.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'errors': 'Category not found'
-        }, status=404)
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'errors': str(e)
-        }, status=400)
+        if category.category_type == 'expense' and budget_value is not None:
+            category.monthly_budget = budget_value
+        elif category.category_type != 'expense':
+            category.monthly_budget = 0  # reset income budget
 
+        category.save()
+        return JsonResponse({'success': True, 'message': 'Category updated successfully'})
+
+    except Category.DoesNotExist:
+        return JsonResponse({'success': False, 'errors': 'Category not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'errors': str(e)}, status=400)
 
 @login_required
 @require_POST
