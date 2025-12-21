@@ -16,26 +16,26 @@ A modern Django web application for managing personal finances with comprehensiv
 ## 📱 Application Screenshots
 
 ### Landing Page
-![Welcome Page](screencapture-welcomepage.png)
+![Welcome Page](images/screencapture-welcomepage.png)
 *Modern landing page with clear value proposition and call-to-action*
 
 ### Authentication
-![Registration](screencapture-register.png)
+![Registration](images/screencapture-register.png)
 *Secure user registration with password validation*
 
 ### Core Features
 | Dashboard | Categories & Budgets |
 |-----------|----------------------|
-| ![Dashboard](screencapture-dashboard.png) | ![Categories & Budgets](screencapture-categories&budgets.png) |
+| ![Dashboard](images/screencapture-dashboard.png) | ![Categories & Budgets](images/screencapture-categories-budgets.png) |
 | *Comprehensive financial overview with charts and alerts* | *Budget management and category organization* |
 
 | Transactions | Financial Reports |
 |--------------|-------------------|
-| ![Transactions](screencapture-transactions.png) | ![Reports](screencapture-reports.png) |
+| ![Transactions](images/screencapture-transactions.png) | ![Reports](images/screencapture-reports.png) |
 | *Income and expense tracking with filtering* | *Financial analysis and data export* |
 
 ### User Settings
-![Profile Settings](screencapture-profile.png)
+![Profile Settings](images/screencapture-profile.png)
 *User profile management with customization options*
 
 ## 🚀 Quick Start
