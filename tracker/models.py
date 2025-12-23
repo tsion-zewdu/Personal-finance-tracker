@@ -49,7 +49,6 @@ class Transaction(models.Model):
     )
     
     # PAYMENT_METHODS defines the choices for the payment_method field
-    # This creates a dropdown in forms and ensures data integrity
     PAYMENT_METHODS = (
         ('cash', 'Cash'),
         ('card', 'Credit/Debit Card'),
