@@ -2,7 +2,6 @@
 
 A modern Django web application for managing personal finances with comprehensive budgeting, expense tracking, and financial reporting features.
 
-![Landing Page](screencapture-welcomepage.png)
 
 ## ✨ Features
 
